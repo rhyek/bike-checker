@@ -9,8 +9,7 @@ async function main() {
   let currentResults: StoreResult[] = [];
   let first = true;
   while (true) {
-    await sleep(5_000);
-    let html: string;
+    let html: string | null = null;
     try {
       html = await fetch(url).then((response) => {
         if (response.ok) {
@@ -20,23 +19,27 @@ async function main() {
       });
     } catch (error) {
       logger.error(error);
-      continue;
     }
-    const oldResults = currentResults;
-    currentResults = getStoreResults(html);
-    if (first) {
-      (async function () {
-        await notifyCurrent(currentResults);
-        await sleep(60 * 1_000);
-      })();
-    } else {
-      const changes = getChanges(oldResults, currentResults);
-      if (changes.length > 0) {
-        await notifyChanges(changes);
+    if (html !== null) {
+      const oldResults = currentResults;
+      currentResults = getStoreResults(html);
+      if (first) {
+        (async function () {
+          while (true) {
+            await notifyCurrent(currentResults);
+            await sleep(60 * 60 * 1_000);
+          }
+        })();
+      } else {
+        const changes = getChanges(oldResults, currentResults);
+        if (changes.length > 0) {
+          await notifyChanges(changes);
+        }
       }
+      logger.info('bike inventory updated');
+      first = false;
     }
-    first = false;
-    logger.info('bike inventory updated');
+    await sleep(60 * 1_000);
   }
 }
 
