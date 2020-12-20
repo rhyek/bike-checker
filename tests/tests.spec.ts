@@ -1,13 +1,26 @@
 import fs from 'fs';
 import path from 'path';
-import { Change, getChanges, getStoreResults, StoreResult } from '../src/utils';
+import cheerio from 'cheerio';
+import {
+  Change,
+  checkForErrors,
+  getChanges,
+  getStoreResults,
+  StoreResult,
+} from '../src/utils';
 
 const html = fs.readFileSync(path.resolve(__dirname, './page.html'), 'utf8');
+const errorHtml = fs.readFileSync(
+  path.resolve(__dirname, './error.html'),
+  'utf8'
+);
 
 describe('tests', () => {
   it('html files were loaded', () => {
     expect(html).toBeDefined();
     expect(html.length).toBeGreaterThan(0);
+    expect(errorHtml).toBeDefined();
+    expect(errorHtml.length).toBeGreaterThan(0);
   });
   describe('getStoreResults', () => {
     it('returns expected results', () => {
@@ -281,6 +294,13 @@ describe('tests', () => {
         },
       ];
       expect(getChanges(last, current)).toEqual(expected);
+    });
+  });
+  describe('error html', () => {
+    it('can detect error', () => {
+      expect(() => checkForErrors(cheerio.load(errorHtml))).toThrowError(
+        /MISSING PRODUCT INFO Please refresh the page./
+      );
     });
   });
 });

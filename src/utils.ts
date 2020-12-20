@@ -9,8 +9,16 @@ export interface StoreResult {
   hasExistence: boolean;
 }
 
+export function checkForErrors($: ReturnType<typeof cheerio.load>) {
+  const message = $('#page-error').text();
+  if (message) {
+    throw new Error(message.trim().replace(/\s+/g, ' '));
+  }
+}
+
 export function getStoreResults(html: string) {
   const $ = cheerio.load(html);
+  checkForErrors($);
   const stores = $('#clubs-selection > div > :nth-child(3) > ul > li');
   const results: StoreResult[] = [];
   for (const store of stores.toArray()) {

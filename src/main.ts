@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { url } from './const';
+import { url } from './consts';
 import { logger } from './logger';
 import { notifyChanges, notifyCurrent } from './mail';
 import { getChanges, getStoreResults, sleep, StoreResult } from './utils';
@@ -9,18 +9,13 @@ async function main() {
   let currentResults: StoreResult[] = [];
   let first = true;
   while (true) {
-    let html: string | null = null;
     try {
-      html = await fetch(url).then((response) => {
+      const html = await fetch(url).then((response) => {
         if (response.ok) {
           return response.text();
         }
         throw new Error(response.statusText);
       });
-    } catch (error) {
-      logger.error(error);
-    }
-    if (html !== null) {
       const oldResults = currentResults;
       currentResults = getStoreResults(html);
       if (first) {
@@ -30,6 +25,7 @@ async function main() {
             await sleep(60 * 60 * 1_000);
           }
         })();
+        first = false;
       } else {
         const changes = getChanges(oldResults, currentResults);
         if (changes.length > 0) {
@@ -37,7 +33,8 @@ async function main() {
         }
       }
       logger.info('bike inventory updated');
-      first = false;
+    } catch (error) {
+      logger.error(error);
     }
     await sleep(60 * 1_000);
   }

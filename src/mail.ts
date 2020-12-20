@@ -1,6 +1,6 @@
 // @ts-ignore
 import gmail from 'gmail-send';
-import { url } from './const';
+import { url } from './consts';
 import { logger } from './logger';
 import { Change, StoreResult } from './utils';
 
